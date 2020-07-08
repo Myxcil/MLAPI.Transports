@@ -54,11 +54,14 @@ namespace LiteNetLibTransport
         public int SimulateMinLatency = 0;
         [Tooltip("Simulated maximum additional latency for packets in milliseconds (0 for no simulation")]
         public int SimulateMaxLatency = 0;
+        [Tooltip("Allow unconnected messages")]
+        public bool UnconnectedMessagesEnabled = false;
 
         private readonly Dictionary<ulong, NetPeer> peers = new Dictionary<ulong, NetPeer>();
         private readonly Dictionary<string, LiteChannel> liteChannels = new Dictionary<string, LiteChannel>();
 
         private NetManager netManager;
+        public NetManager NetManager { get { return netManager; } }
         private Queue<Event> eventQueue = new Queue<Event>();
 
         private byte[] messageBuffer;
@@ -242,6 +245,7 @@ namespace LiteNetLibTransport
 
             netManager = new NetManager(this)
             {
+                UnconnectedMessagesEnabled = UnconnectedMessagesEnabled,
                 PingInterval = SecondsToMilliseconds(PingInterval),
                 DisconnectTimeout = SecondsToMilliseconds(DisconnectTimeout),
                 ReconnectDelay = SecondsToMilliseconds(ReconnectDelay),
@@ -380,9 +384,12 @@ namespace LiteNetLibTransport
             eventQueue.Enqueue(@event);
         }
 
+        public delegate void NetworkReceiveUnconnected(IPEndPoint remoteEndPoint, NetPacketReader reader, UnconnectedMessageType messageType);
+        public NetworkReceiveUnconnected OnNetworkReceiveUnconnected;
+
         void INetEventListener.OnNetworkReceiveUnconnected(IPEndPoint remoteEndPoint, NetPacketReader reader, UnconnectedMessageType messageType)
         {
-            // Ignore
+            OnNetworkReceiveUnconnected?.Invoke(remoteEndPoint, reader, messageType);
         }
 
         void INetEventListener.OnNetworkLatencyUpdate(NetPeer peer, int latency)
