@@ -205,8 +205,10 @@ namespace LiteNetLibTransport
 
         public override void DisconnectLocalClient()
         {
-            netManager.Flush();
-            netManager.DisconnectAll();
+            if (netManager != null)
+            {
+                netManager.DisconnectAll();
+            }
             peers.Clear();
         }
 
@@ -222,8 +224,10 @@ namespace LiteNetLibTransport
 
         public override void Shutdown()
         {
-            netManager.Flush();
-            netManager.Stop();
+            if (netManager != null)
+            {
+                netManager.Stop();
+            }
             peers.Clear();
 
             hostType = HostType.None;
